@@ -1,2 +1,8 @@
-import sys 
-sys.path.insert(0, 'C:\Users\USER\Desktop\Uni\6th Semester\Redes Neuronales\Red-Neuronal\src')
+from mnist_loader import *
+import network
+
+training_data, test_data, _ = load_data_wrapper()
+
+net = network.Network([784, 30, 10])
+net.SGD(training_data, 100, 10, 0.05, test_data=test_data)
+
