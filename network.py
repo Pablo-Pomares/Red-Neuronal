@@ -101,10 +101,10 @@ class Network(object):
             v_w = [beta_2*vw + (1-beta_2)*(nw**2) for vw, nw in zip(v_w, nabla_w)]
             
             # creo las hats de cada m y v
-            m_b_hat = [mb/(1-beta_1*t) for mb in m_b]
-            m_w_hat = [mw/(1-beta_1*t) for mw in m_w]
-            v_b_hat = [vb/(1-beta_2*t) for vb in v_b]
-            v_w_hat = [vw/(1-beta_2*t) for vw in v_w]
+            m_b_hat = [mb/(1-beta_1**t) for mb in m_b]
+            m_w_hat = [mw/(1-beta_1**t) for mw in m_w]
+            v_b_hat = [vb/(1-beta_2**t) for vb in v_b]
+            v_w_hat = [vw/(1-beta_2**t) for vw in v_w]
             
             # Actualizo las w y b 
             self.weights = [w - (eta/(np.sqrt(vw)+epsilon))*mw 
