@@ -96,21 +96,35 @@ class Network(object):
                 print(f"Epoch {j} complete")
         print("Training complete \(^◇^)/")
         
-        def update_mini_batch(mini_batch, eta):
+        def update_mini_batch(mini_batch, eta, beta_1, beta_2, epsilon):
             """Update the network's weights and biases by applying
             gradient descent using backpropagation to a single mini batch.
             The ``mini_batch`` is a list of tuples ``(x, y)``, and ``eta``
             is the learning rate."""
             nabla_b = [np.zeros(b.shape) for b in self.biases]
             nabla_w = [np.zeros(w.shape) for w in self.weights]
+            mb = 0
+            mw = 0
+            vb = 0
+            vw = 0
+            mb_hat = 0
+            mw_hat = 0
+            vb_hat = 0
+            vw_hat = 0
+            t = 0
             for x, y in mini_batch:
                 delta_nabla_b, delta_nabla_w = self.backprop(x, y)
                 nabla_b = [nb+dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
                 nabla_w = [nw+dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
-            self.weights = [w-(eta/len(mini_batch))*nw
-                            for w, nw in zip(self.weights, nabla_w)]
-            self.biases = [b-(eta/len(mini_batch))*nb
-                        for b, nb in zip(self.biases, nabla_b)]
+                t += 1
+                mb = beta_1*mb + (1-beta_1)*nabla_b
+                mw = beta_1*mw + (1-beta_1)*nabla_w
+                vb = beta_2*vb + (1-beta_2)*(nabla_b**2)
+                vw = beta_2*vw + (1-beta_2)*(nabla_b**2)
+                mb_hat = mb/(1-beta_1**t)
+                mw_hat = mw/(1-beta_1**t)
+                vb_hat = vb/(1-beta_2**t)
+                vw_hat = mb/(1-beta_2**t)
             
     def feedforward(self, a):
         """Return the output of the network if ``a`` is input."""
