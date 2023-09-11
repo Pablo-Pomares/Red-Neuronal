@@ -77,7 +77,7 @@ class Network(object):
                 print(f"Epoch {j} complete")
         print("Training complete \(^◇^)/")
             
-    def adam(self, training_data, epochs, mini_batch_size, eta, test_data=None, beta_1=0.9, beta_2=0.999, epsilon=1e-07):
+    def adam(self, training_data, epochs, mini_batch_size, eta, test_data=None, beta_1=0.9, beta_2=0.9, epsilon=1e-07):
         """
         Implementación del optimizador Adam 
         """
