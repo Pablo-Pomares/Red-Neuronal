@@ -85,26 +85,26 @@ class Network(object):
         def update_mini_batch(mini_batch, eta, beta_1, beta_2, epsilon, t):
             nabla_b = [np.zeros(b.shape) for b in self.biases]
             nabla_w = [np.zeros(w.shape) for w in self.weights]
-            for x, y in mini_batch:
-                delta_nabla_b, delta_nabla_w = self.backprop(x, y)
-                nabla_b = [nb+dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
-                nabla_w = [nw+dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
-
             # Llamo a las variables m y v que están fuera de esta función y las actualizo
             nonlocal m_b
             nonlocal m_w
             nonlocal v_b
             nonlocal v_w
+            for x, y in mini_batch:
+                delta_nabla_b, delta_nabla_w = self.backprop(x, y)
+                nabla_b = [nb+dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
+                nabla_w = [nw+dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
+        
             m_b = [beta_1*mb + (1-beta_1)*nb for mb, nb in zip(m_b, nabla_b)]
             v_b = [beta_2*vb + (1-beta_2)*(nb**2) for vb, nb in zip(v_b, nabla_b)]
             m_w = [beta_1*mw + (1-beta_1)*nw for mw, nw in zip(m_w, nabla_w)]
             v_w = [beta_2*vw + (1-beta_2)*(nw**2) for vw, nw in zip(v_w, nabla_w)]
             
             # creo las hats de cada m y v
-            m_b_hat = [abs(mb/(1-beta_1*t)) for mb in m_b]
-            m_w_hat = [abs(mw/(1-beta_1*t)) for mw in m_w]
-            v_b_hat = [abs(vb/(1-beta_2*t)) for vb in v_b]
-            v_w_hat = [abs(vw/(1-beta_2*t)) for vw in v_w]
+            m_b_hat = [mb/(1-beta_1*t) for mb in m_b]
+            m_w_hat = [mw/(1-beta_1*t) for mw in m_w]
+            v_b_hat = [vb/(1-beta_2*t) for vb in v_b]
+            v_w_hat = [vw/(1-beta_2*t) for vw in v_w]
             
             # Actualizo las w y b 
             self.weights = [w - (eta/(np.sqrt(vw)+epsilon))*mw 
@@ -115,17 +115,19 @@ class Network(object):
             
         if test_data: n_test = len(test_data)
         n = len(training_data)
-        m_b = [np.zeros(b.shape) for b in self.biases] # m para las b
-        v_b = [np.zeros(b.shape) for b in self.biases] # v para las b
-        m_w = [np.zeros(w.shape) for w in self.weights] # m para las w
-        v_w = [np.zeros(w.shape) for w in self.weights] # v para las w
+        m_b = [abs(np.zeros(b.shape)) for b in self.biases] # m para las b
+        v_b = [abs(np.zeros(b.shape)) for b in self.biases] # v para las b
+        m_w = [abs(np.zeros(w.shape)) for w in self.weights] # m para las w
+        v_w = [abs(np.zeros(w.shape)) for w in self.weights] # v para las w
+        t = 0
         for j in range(epochs):
+            t += 1
             random.shuffle(training_data)
             mini_batches = [
                 training_data[k:k+mini_batch_size]
                 for k in range(0, n, mini_batch_size)]
             for mini_batch in mini_batches:
-                update_mini_batch(mini_batch, eta, beta_1, beta_2, epsilon, j)
+                update_mini_batch(mini_batch, eta, beta_1, beta_2, epsilon, t)
             if test_data:
                 print(f"Epoch {j}: {self.evaluate(test_data)} / {n_test}")
             else:
@@ -189,12 +191,8 @@ class Network(object):
 
 #### Miscellaneous functions
 def sigmoid(z):
-  if z > 0:   
-    x = np.exp(-z)
-    return 1/(1+x)
-  else:
-    x = np.exp(z)
-    return x/(1+x)
+    """The sigmoid function."""
+    return 1.0/(1.0+np.exp(-z))
 
 def sigmoid_prime(z):
     """Derivative of the sigmoid function."""
