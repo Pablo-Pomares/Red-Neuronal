@@ -164,7 +164,7 @@ class Network(object):
         match self.loss_function:
             case "mean_square_avg":       
                 delta = self.cost_derivative(activations[-1], y) * \
-                sigmoid_prime(zs[-1])
+                sigmoid_prime(np.array(zs[-1], dtype=np.longdouble))
             case "cross_entropy":
                 delta = self.cross_entropy_derivative(activations[-1], y) * \
                 self.softmax_prime(zs[-1])
@@ -195,14 +195,14 @@ class Network(object):
                         for (x, y) in test_data]
         return sum(int(x == y) for (x, y) in test_results)
     
-    def softmax(self, z):
+    def softmax(self, x):
         '''Implementación de softmax'''
-        z = self.feedforward(z)
+        z = self.feedforward(x)
         a = [zi/sum(z) for zi in z]
         return a
     
-    def softmax_prime(self, z):
-        return self.softmax(z)*(1-self.softmax(z))
+    def softmax_prime(self, x):
+        return self.softmax(x)*(1-self.softmax(x))
     
     def cross_entropy_derivative(self, x, y):
         """Derivada de cross entropy"""
