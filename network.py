@@ -144,7 +144,7 @@ class Network(object):
             a = sigmoid(np.dot(w, a)+b)
         return a
 
-    def backprop(self, x, y, cross_entropy=False):
+    def backprop(self, x, y):
         """Return a tuple ``(nabla_b, nabla_w)`` representing the
         gradient for the cost function C_x.  ``nabla_b`` and
         ``nabla_w`` are layer-by-layer lists of numpy arrays, similar
