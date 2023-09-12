@@ -162,9 +162,9 @@ class Network(object):
             activations.append(activation)
         # backward pass
         match self.loss_function:
-            case "mean_square_avg":       
+            case "mean_square_avg":      
                 delta = self.cost_derivative(activations[-1], y) * \
-                sigmoid_prime(np.array(zs[-1], dtype=np.longdouble))
+                sigmoid_prime(zs[-1])
             case "cross_entropy":
                 delta = self.cross_entropy_derivative(activations[-1], y) * \
                 self.softmax_prime(zs[-1])
@@ -197,17 +197,18 @@ class Network(object):
     
     def softmax(self, x):
         '''Implementación de softmax'''
-        z = self.feedforward(x)
-        a = [zi/sum(z) for zi in z]
+        z = x
+        a = np.array([zi/sum(z) for zi in z])
         return a
     
     def softmax_prime(self, x):
-        return self.softmax(x)*(1-self.softmax(x))
+        sftmax = self.softmax(x)
+        return [ai*(1-ai) for ai in sftmax]
     
     def cross_entropy_derivative(self, x, y):
         """Derivada de cross entropy"""
         a = self.softmax(x)
-        nabla_ce = [((ai - 1)*yi/self.num_layers) for ai, yi in zip(a, y)]
+        nabla_ce = np.array([((ai - 1)*yi/self.num_layers) for ai, yi in zip(a, y)])
         return nabla_ce
 
     def cost_derivative(self, output_activations, y):
