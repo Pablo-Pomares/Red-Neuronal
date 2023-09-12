@@ -18,7 +18,7 @@ import numpy as np
 
 class Network(object):
 
-    def __init__(self, sizes):
+    def __init__(self, sizes, softmax=False):
         """The list ``sizes`` contains the number of neurons in the
         respective layers of the network.  For example, if the list
         was [2, 3, 1] then it would be a three-layer network, with the
@@ -129,7 +129,10 @@ class Network(object):
             for mini_batch in mini_batches:
                 update_mini_batch(mini_batch, eta, beta_1, beta_2, epsilon, t)
             if test_data:
-                print(f"Epoch {j}: {self.evaluate(test_data)} / {n_test}")
+                if self.softmax:
+                    print(f"Epoch {j}: {self.evaluate(test_data)} / {n_test}")
+                else:
+                    print(f"Epoch {j}: {self.evaluate(test_data)} / {n_test}")
             else:
                 print(f"Epoch {j} complete")
         print("Training complete \(^◇^)/")
@@ -138,6 +141,12 @@ class Network(object):
         """Return the output of the network if ``a`` is input."""
         for b, w in zip(self.biases, self.weights):
             a = sigmoid(np.dot(w, a)+b)
+        return a
+    
+    def softmax(self, z):
+        '''Implementación de softmax'''
+        z = self.feedforward(z)
+        a = [zi/sum(z) for zi in z]
         return a
 
     def backprop(self, x, y):
