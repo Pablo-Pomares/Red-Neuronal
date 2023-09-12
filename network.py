@@ -18,7 +18,7 @@ import numpy as np
 
 class Network(object):
 
-    def __init__(self, sizes, softmax=False):
+    def __init__(self, sizes, loss_function="mean_square_avg"):
         """The list ``sizes`` contains the number of neurons in the
         respective layers of the network.  For example, if the list
         was [2, 3, 1] then it would be a three-layer network, with the
@@ -30,6 +30,7 @@ class Network(object):
         won't set any biases for those neurons, since biases are only
         ever used in computing the outputs from later layers."""
         self.num_layers = len(sizes)
+        self.loss_function = loss_function
         self.sizes = sizes
         self.biases = [np.random.randn(y, 1) for y in sizes[1:]]
         self.weights = [np.random.randn(y, x)
@@ -142,14 +143,8 @@ class Network(object):
         for b, w in zip(self.biases, self.weights):
             a = sigmoid(np.dot(w, a)+b)
         return a
-    
-    def softmax(self, z):
-        '''Implementación de softmax'''
-        z = self.feedforward(z)
-        a = [zi/sum(z) for zi in z]
-        return a
 
-    def backprop(self, x, y):
+    def backprop(self, x, y, cross_entropy=False):
         """Return a tuple ``(nabla_b, nabla_w)`` representing the
         gradient for the cost function C_x.  ``nabla_b`` and
         ``nabla_w`` are layer-by-layer lists of numpy arrays, similar
@@ -166,8 +161,15 @@ class Network(object):
             activation = sigmoid(z)
             activations.append(activation)
         # backward pass
-        delta = self.cost_derivative(activations[-1], y) * \
-            sigmoid_prime(zs[-1])
+        match self.loss_function:
+            case "mean_square_avg":       
+                delta = self.cost_derivative(activations[-1], y) * \
+                sigmoid_prime(zs[-1])
+            case "cross_entropy":
+                delta = self.cross_entropy_derivative(activations[-1], y) * \
+                self.softmax_prime(zs[-1])
+            case _:
+                print("????")
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
         # Note that the variable l in the loop below is used a little
@@ -192,6 +194,21 @@ class Network(object):
         test_results = [(np.argmax(self.feedforward(x)), y)
                         for (x, y) in test_data]
         return sum(int(x == y) for (x, y) in test_results)
+    
+    def softmax(self, z):
+        '''Implementación de softmax'''
+        z = self.feedforward(z)
+        a = [zi/sum(z) for zi in z]
+        return a
+    
+    def softmax_prime(self, z):
+        return self.softmax(z)*(1-self.softmax(z))
+    
+    def cross_entropy_derivative(self, x, y):
+        """Derivada de cross entropy"""
+        a = self.softmax(x)
+        nabla_ce = [((ai - 1)*yi/self.num_layers) for ai, yi in zip(a, y)]
+        return nabla_ce
 
     def cost_derivative(self, output_activations, y):
         """Return the vector of partial derivatives \partial C_x /
