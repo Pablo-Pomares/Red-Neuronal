@@ -47,7 +47,7 @@ class Network(object):
         epoch, and partial progress printed out.  This is useful for
         tracking progress, but slows things down substantially."""
 
-        def update_mini_batch(mini_batch, eta):
+        def update_mini_batch(mini_batch, eta, mini_batch_size):
             """Update the network's weights and biases by applying
             gradient descent using backpropagation to a single mini batch.
             The ``mini_batch`` is a list of tuples ``(x, y)``, and ``eta``
@@ -55,7 +55,7 @@ class Network(object):
             nabla_b = [np.zeros(b.shape) for b in self.biases]
             nabla_w = [np.zeros(w.shape) for w in self.weights]
             for x, y in mini_batch:
-                delta_nabla_b, delta_nabla_w = self.backprop(x, y)
+                delta_nabla_b, delta_nabla_w = self.backprop(x, y, mini_batch_size)
                 nabla_b = [nb+dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
                 nabla_w = [nw+dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
             self.weights = [w-(eta/len(mini_batch))*nw
@@ -71,19 +71,20 @@ class Network(object):
                 training_data[k:k+mini_batch_size]
                 for k in range(0, n, mini_batch_size)]
             for mini_batch in mini_batches:
-                update_mini_batch(mini_batch, eta)
+                update_mini_batch(mini_batch, eta, mini_batch_size)
             if test_data:
                 print(f"Epoch {j}: {self.evaluate(test_data)} / {n_test}")
             else:
                 print(f"Epoch {j} complete")
         print("Training complete \(^◇^)/")
             
-    def adam(self, training_data, epochs, mini_batch_size, eta, test_data=None, beta_1=0.9, beta_2=0.9, epsilon=1e-07):
+    def adam(self, training_data, epochs, mini_batch_size, eta, test_data=None, beta_1=0.9, beta_2=0.999, epsilon=1e-07):
         """
         Implementación del optimizador Adam 
         """
+        self.mini_batch_size = mini_batch_size 
         
-        def update_mini_batch(mini_batch, eta, beta_1, beta_2, epsilon, t):
+        def update_mini_batch(mini_batch, eta, beta_1, beta_2, epsilon, t, mini_batch_size):
             nabla_b = [np.zeros(b.shape) for b in self.biases]
             nabla_w = [np.zeros(w.shape) for w in self.weights]
             # Llamo a las variables m y v que están fuera de esta función y las actualizo
@@ -92,7 +93,7 @@ class Network(object):
             nonlocal v_b
             nonlocal v_w
             for x, y in mini_batch:
-                delta_nabla_b, delta_nabla_w = self.backprop(x, y)
+                delta_nabla_b, delta_nabla_w = self.backprop(x, y, mini_batch_size)
                 nabla_b = [nb+dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
                 nabla_w = [nw+dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
         
@@ -128,7 +129,7 @@ class Network(object):
                 training_data[k:k+mini_batch_size]
                 for k in range(0, n, mini_batch_size)]
             for mini_batch in mini_batches:
-                update_mini_batch(mini_batch, eta, beta_1, beta_2, epsilon, t)
+                update_mini_batch(mini_batch, eta, beta_1, beta_2, epsilon, t, mini_batch_size)
             if test_data:
                 if self.softmax:
                     print(f"Epoch {j}: {self.evaluate(test_data)} / {n_test}")
@@ -144,7 +145,7 @@ class Network(object):
             a = sigmoid(np.dot(w, a)+b)
         return a
 
-    def backprop(self, x, y):
+    def backprop(self, x, y, mini_batch_size):
         """Return a tuple ``(nabla_b, nabla_w)`` representing the
         gradient for the cost function C_x.  ``nabla_b`` and
         ``nabla_w`` are layer-by-layer lists of numpy arrays, similar
@@ -166,10 +167,10 @@ class Network(object):
                 delta = self.cost_derivative(activations[-1], y) * \
                 sigmoid_prime(zs[-1])
             case "cross_entropy":
-                delta = self.cross_entropy_derivative(activations[-1], y) * \
-                self.softmax_prime(zs[-1])
+                delta = self.cross_entropy_derivative(activations[-1], y, mini_batch_size)*self.softmax_prime(zs[-1])
             case _:
                 print("????")
+                exit()
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
         # Note that the variable l in the loop below is used a little
@@ -198,17 +199,17 @@ class Network(object):
     def softmax(self, x):
         '''Implementación de softmax'''
         z = x
-        a = np.array([zi/sum(z) for zi in z])
+        a = [zi/sum(z) for zi in z]
         return a
     
     def softmax_prime(self, x):
         sftmax = self.softmax(x)
         return [ai*(1-ai) for ai in sftmax]
     
-    def cross_entropy_derivative(self, x, y):
+    def cross_entropy_derivative(self, x, y, n):
         """Derivada de cross entropy"""
         a = self.softmax(x)
-        nabla_ce = np.array([((ai - 1)*yi/self.num_layers) for ai, yi in zip(a, y)])
+        nabla_ce = np.array([-yi/(n*ai) for ai, yi in zip(a, y)])
         return nabla_ce
 
     def cost_derivative(self, output_activations, y):
