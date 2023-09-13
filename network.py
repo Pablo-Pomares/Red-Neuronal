@@ -167,7 +167,7 @@ class Network(object):
                 delta = self.cost_derivative(activations[-1], y) * \
                 sigmoid_prime(zs[-1])
             case "cross_entropy":
-                delta = self.cross_entropy_derivative(activations[-1], y, mini_batch_size)*self.softmax_prime(zs[-1])
+                delta = [ce*sp for ce, sp in zip(self.cross_entropy_derivative(activations[-1], y), self.softmax_prime(activations[-1]))]
             case _:
                 print("????")
                 exit()
@@ -206,10 +206,10 @@ class Network(object):
         sftmax = self.softmax(x)
         return [ai*(1-ai) for ai in sftmax]
     
-    def cross_entropy_derivative(self, x, y, n):
+    def cross_entropy_derivative(self, x, y):
         """Derivada de cross entropy"""
         a = self.softmax(x)
-        nabla_ce = np.array([-yi/(n*ai) for ai, yi in zip(a, y)])
+        nabla_ce = [-yi/(ai) for ai, yi in zip(a, y)]
         return nabla_ce
 
     def cost_derivative(self, output_activations, y):
