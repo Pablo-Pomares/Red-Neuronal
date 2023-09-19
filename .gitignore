@@ -2,3 +2,4 @@ loc.py
 src/ec2
 .vscode/*
 __pycache__/*
+.ipynb_checkpoints/*

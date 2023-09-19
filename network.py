@@ -167,7 +167,7 @@ class Network(object):
                 delta = self.cost_derivative(activations[-1], y) * \
                 sigmoid_prime(zs[-1])
             case "cross_entropy":
-                delta = [ce*sp for ce, sp in zip(self.cross_entropy_derivative(activations[-1], y), self.softmax_prime(activations[-1]))]
+                delta = activations[-1] - y
             case _:
                 print("????")
                 exit()
